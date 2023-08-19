@@ -154,7 +154,7 @@ if __name__ == '__main__':
                 errors.append({'t':time.time(), 'e':str(e)})
                 print(f"{datetime.datetime.now()} -> Got Error {str(e)}")
                 
-                dt_off = datetime.datetime.timestamp(datetime.datetime.now() + datetime.timedelta(hours=3))
+                dt_off = datetime.datetime.timestamp(datetime.datetime.now() + datetime.timedelta(hours=1))
                 
                 new_list = []
                 for e in errors:
@@ -163,7 +163,7 @@ if __name__ == '__main__':
                 
                 errors = new_list
 
-                if len(errors) > 5:
+                if len(errors) > 7:
                     for e in errors:
                         pprint.pprint(e)
                     quit(-1)
