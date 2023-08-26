@@ -72,7 +72,7 @@ def main():
                 elif y['type'] == "app.bsky.feed.generator": r.lpush("BlueSky-Firehose-Unprocessed", json.dumps(y))
                 elif y['type'] == "app.bsky.graph.listitem": r.lpush("BlueSky-Firehose-Unprocessed", json.dumps(y))
                 elif y['type'] == "app.bsky.graph.list": r.lpush("BlueSky-Firehose-Unprocessed", json.dumps(y))
-                else: pass
+                else: r.lpush("BlueSky-Firehose-Unprocessed", json.dumps(y))
             
             c.commit()
         if quit_flag == True: quit(0)
