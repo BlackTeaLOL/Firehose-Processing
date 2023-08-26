@@ -1,0 +1,81 @@
+CREATE TABLE public.block
+(
+	date timestamp with time zone NOT NULL,
+	cid text NOT NULL,
+	uri text NOT NULL,
+	repo text NOT NULL,
+	subject text NOT NULL,
+	createdAt timestamp with time zone NOT NULL
+)
+
+WITH (
+    OIDS = FALSE
+);
+ALTER TABLE IF EXISTS public.block
+    OWNER to BlueSky;
+
+CREATE TABLE public.feed_like
+(
+	date timestamp with time zone NOT NULL,
+	cid text NOT NULL,
+	uri text NOT NULL,
+	repo text NOT NULL,
+	subject text NOT NULL,
+	createdAt timestamp with time zone NOT NULL
+)
+
+WITH (
+    OIDS = FALSE
+);
+ALTER TABLE IF EXISTS public.feed_like
+    OWNER to BlueSky;
+
+CREATE TABLE public.follow
+(
+	date timestamp with time zone NOT NULL,
+	cid text NOT NULL,
+	uri text NOT NULL,
+	repo text NOT NULL,
+	subject text NOT NULL,
+	createdAt timestamp with time zone NOT NULL
+)
+
+WITH (
+    OIDS = FALSE
+);
+ALTER TABLE IF EXISTS public.follow
+    OWNER to BlueSky;
+
+CREATE TABLE public.feed_repost
+(
+	date timestamp with time zone NOT NULL,
+	cid text NOT NULL,
+	uri text NOT NULL,
+	repo text NOT NULL,
+	subject_cid text NOT NULL,
+	subject_uri text NOT NULL,
+	createdAt timestamp with time zone NOT NULL
+)
+
+WITH (
+    OIDS = FALSE
+);
+ALTER TABLE IF EXISTS public.feed_repost
+    OWNER to BlueSky;
+    
+CREATE TABLE public.feed_post
+(
+	date timestamp with time zone NOT NULL,
+	cid text NOT NULL,
+	uri text NOT NULL,
+	repo text NOT NULL,
+	record_text text NOT NULL,
+	createdAt timestamp with time zone NOT NULL,
+	record json NOT NULL
+)
+
+WITH (
+    OIDS = FALSE
+);
+ALTER TABLE IF EXISTS public.feed_post
+    OWNER to BlueSky;
