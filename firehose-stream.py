@@ -121,10 +121,19 @@ def sort_records(commit: models.ComAtprotoSyncSubscribeRepos.Commit) -> list:
 
 def main(cursor=None):
     #benchmark_times = []
+    r = redis.Redis()
+
     try:
-        if cursor == None: client = FirehoseSubscribeReposClient()
-        else: client = FirehoseSubscribeReposClient({'cursor':cursor})
-        r = redis.Redis()
+        if cursor == None:
+            seq = r.get("BlueSky-Firehose-Seq")
+            if seq is not None:
+                print(f"Resume Cursor -> {seq}")
+                client = FirehoseSubscribeReposClient({'cursor': int(seq.decode('utf-8'))})
+            else: client = FirehoseSubscribeReposClient()
+        else:
+            print(f"Resume Cursor -> {cursor}")
+            client = FirehoseSubscribeReposClient({'cursor':int(cursor)})
+        
 
         with RotateFile("BlueSkyStream-$d.json") as ou:
             def on_message_handler(message: MessageFrame) -> None:
@@ -160,7 +169,7 @@ if __name__ == '__main__':
                 # Peek A Boo!
                 r = redis.Redis()
                 # If there is no Seq, it still returns None, so.... yea...
-                last_seq = r.get("BlueSky-Firehose-Seq").encode('utf-8')
+                last_seq = r.get("BlueSky-Firehose-Seq").decode('utf-8')
                 r.close()
 
                 errors.append({'t':time.time(), 'e':repr(e), 'seq':last_seq})
@@ -182,4 +191,3 @@ if __name__ == '__main__':
                     quit(-1)
                 
                 time.sleep(14)
-                continue
