@@ -14,7 +14,6 @@
 #
 # 0. You just DO WHAT THE FUCK YOU WANT TO.
 
-
 from atproto import CAR, AtUri
 from atproto.firehose import FirehoseSubscribeReposClient, parse_subscribe_repos_message
 from atproto.firehose.models import MessageFrame
@@ -28,6 +27,7 @@ import time
 import datetime
 from string import Template
 import subprocess
+import traceback
 
 class RotateFile:
 
@@ -113,29 +113,33 @@ def sort_records(commit: models.ComAtprotoSyncSubscribeRepos.Commit) -> list:
             'type': record_raw_data['$type'],
             'uri': str(uri),
             'repo': commit.repo,
+            'seq': commit.seq,
             'record': walk(record_raw_data)
         })
 
     return records
 
-def main():
+def main(cursor=None):
     #benchmark_times = []
     try:
-        client = FirehoseSubscribeReposClient()
+        if cursor == None: client = FirehoseSubscribeReposClient()
+        else: client = FirehoseSubscribeReposClient({'cursor':cursor})
         r = redis.Redis()
 
         with RotateFile("BlueSkyStream-$d.json") as ou:
             def on_message_handler(message: MessageFrame) -> None:
                 commit = parse_subscribe_repos_message(message)
                 if not isinstance(commit, models.ComAtprotoSyncSubscribeRepos.Commit):
+                    print(commit)
                     return
 
                 ops = sort_records(commit)
                 
-                #start = time.time()
+                start = time.time()
                 records = []
                 for record in ops:
                     r.lpush("BlueSky-Firehose", json.dumps(record))
+                    r.set("BlueSky-Firehose-Seq", record['seq'])
                     ou.write(f"{json.dumps(record)}\n")
 
                 #end = time.time()
@@ -148,11 +152,20 @@ def main():
 
 errors = []
 if __name__ == '__main__':
+        last_seq = None
         while True:
-            try: main()
+            try: main(last_seq)
             except Exception as e:
-                errors.append({'t':time.time(), 'e':str(e)})
-                print(f"{datetime.datetime.now()} -> Got Error {str(e)}")
+                
+                # Peek A Boo!
+                r = redis.Redis()
+                # If there is no Seq, it still returns None, so.... yea...
+                last_seq = r.get("BlueSky-Firehose-Seq").encode('utf-8')
+                r.close()
+
+                errors.append({'t':time.time(), 'e':repr(e), 'seq':last_seq})
+                print(traceback.format_exc())
+                print(f"{datetime.datetime.now()} -> Got Error {repr(e)} at SEQ:{last_seq}")
                 
                 dt_off = datetime.datetime.timestamp(datetime.datetime.now() + datetime.timedelta(hours=1))
                 
@@ -168,5 +181,5 @@ if __name__ == '__main__':
                         pprint.pprint(e)
                     quit(-1)
                 
-                time.sleep(7)
-
+                time.sleep(14)
+                continue
